@@ -404,7 +404,7 @@
                 
                 <div class="time-group-horizontal">
                     <label for="minutosInput">Minutos</label>
-                    <input type="number" id="minutosInput" min="0" max="59" value="10" placeholder="10">
+                    <input type="number" id="minutosInput" min="0" max="59" value="0" placeholder="0">
                 </div>
                 
                 <div class="time-separator">:</div>
@@ -555,7 +555,7 @@
         // ============================================
         function calcularTiempoTotal() {
             const horas = parseInt(horasInput.value) || 0;
-            const minutos = parseInt(minutosInput.value) || 10;
+            const minutos = parseInt(minutosInput.value) || 0;
             const segundos = parseInt(segundosInput.value) || 0;
             
             // Validar valores
@@ -848,4 +848,5 @@
         window.addEventListener('load', inicializar);
     </script>
 </body>
+
 </html>
