@@ -8,8 +8,441 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
-        /* ... (todo el CSS permanece igual que proporcionaste) ... */
-        /* Mantén todo tu CSS original aquí sin cambios */
+        :root {
+            --primary-dark: #1a237e;
+            --primary-light: #283593;
+            --accent-green: #00C853;
+            --accent-green-dark: #4CAF50;
+            --accent-blue: #2196F3;
+            --accent-red: #f44336;
+            --accent-orange: #FF9800;
+            --accent-yellow: #FFC107;
+            --text-light: #ffffff;
+            --text-muted: #b0bec5;
+            --bg-overlay: rgba(0, 0, 0, 0.8);
+            --border-light: rgba(255, 255, 255, 0.15);
+            --success-bg: rgba(76, 175, 80, 0.2);
+            --danger-bg: rgba(244, 67, 54, 0.2);
+            --shadow-heavy: 0 20px 40px rgba(0, 0, 0, 0.5);
+            --shadow-medium: 0 10px 20px rgba(0, 0, 0, 0.3);
+            --timer-xl: 15rem;
+            --timer-lg: 10rem;
+            --timer-md: 7rem;
+            --timer-sm: 5rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--bg-overlay);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: var(--shadow-heavy);
+            border: 1px solid var(--border-light);
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--accent-yellow), var(--accent-orange), var(--accent-red));
+            border-radius: 24px 24px 0 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .config-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .config-title {
+            color: var(--accent-yellow);
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .time-inputs-horizontal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .time-group-horizontal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            flex: 1;
+            max-width: 80px;
+        }
+
+        .time-group-horizontal label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-yellow);
+            white-space: nowrap;
+        }
+
+        .time-group-horizontal input {
+            padding: 0.6rem 0.5rem;
+            font-size: 1.5rem;
+            border-radius: 10px;
+            border: 2px solid var(--border-light);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 100%;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .time-group-horizontal input:focus {
+            outline: none;
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
+        }
+
+        .time-group-horizontal input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .time-separator {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent-yellow);
+            margin: 0 2px;
+            align-self: center;
+            line-height: 1;
+        }
+
+        .status-container {
+            margin: 1.5rem 0;
+        }
+
+        .phase-indicator {
+            font-size: 1.6rem;
+            font-weight: 700;
+            padding: 0.8rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+        }
+
+        /* CLASES AÑADIDAS PARA LOS ESTADOS VISUALES */
+        .phase-indicator.en-ejecucion {
+            background: var(--success-bg);
+            border-color: var(--accent-green);
+            color: #c8e6c9;
+        }
+
+        .phase-indicator.detenido {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--border-light);
+        }
+
+        .phase-indicator.tiempo-critico {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: var(--accent-red);
+            color: #ffcdd2;
+        }
+
+        .phase-indicator.tiempo-alerta {
+            background: rgba(255, 152, 0, 0.2);
+            border-color: var(--accent-orange);
+            color: #ffe0b2;
+        }
+
+        .timer-display {
+            font-family: 'Courier New', 'Roboto Mono', 'Consolas', monospace;
+            font-size: var(--timer-xl);
+            font-weight: 900;
+            text-shadow: 
+                0 0 30px rgba(255, 255, 255, 0.3),
+                0 0 60px rgba(255, 255, 255, 0.2),
+                0 0 100px rgba(255, 255, 255, 0.1);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 5px;
+            line-height: 1;
+            transition: all 0.3s;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.3),
+                0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 1rem;
+        }
+
+        .timer-display.tiempo-critico {
+            color: #ff4444 !important;
+            animation: pulse 0.8s infinite alternate;
+            text-shadow: 
+                0 0 40px rgba(255, 68, 68, 0.8),
+                0 0 80px rgba(255, 68, 68, 0.6),
+                0 0 120px rgba(255, 68, 68, 0.4) !important;
+        }
+
+        .timer-display.tiempo-alerta {
+            color: #ff9800 !important;
+            text-shadow: 
+                0 0 30px rgba(255, 152, 0, 0.7),
+                0 0 60px rgba(255, 152, 0, 0.5),
+                0 0 90px rgba(255, 152, 0, 0.3) !important;
+        }
+
+        @keyframes pulse {
+            0% { 
+                transform: scale(1); 
+                opacity: 1; 
+                filter: brightness(1.2);
+            }
+            100% { 
+                transform: scale(1.02); 
+                opacity: 0.9; 
+                filter: brightness(1.5);
+            }
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 1.5rem auto;
+            max-width: 800px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            width: 0%;
+            transition: width 1s linear;
+            border-radius: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1.2rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 160px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark));
+            color: white;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-start:hover:not(:disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 200, 83, 0.3);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, var(--accent-red), #d32f2f);
+            color: white;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, var(--accent-blue), #1976D2);
+            color: white;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-reset:hover:not(:disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .connection-online {
+            background: rgba(0, 200, 83, 0.9);
+            color: white;
+            border-color: rgba(0, 200, 83, 0.5);
+        }
+
+        .connection-offline {
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            border-color: rgba(244, 67, 54, 0.5);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container { padding: 1.5rem; }
+            h1 { font-size: 2rem; }
+            .timer-display { 
+                font-size: var(--timer-lg);
+                letter-spacing: 6px; 
+                min-height: 140px;
+                max-width: 600px;
+            }
+            .phase-indicator { 
+                font-size: 1.4rem; 
+                min-height: 60px;
+                padding: 0.6rem;
+            }
+            .btn { 
+                min-width: 140px; 
+                padding: 1rem 1.8rem;
+                font-size: 1.1rem;
+            }
+            .time-inputs-horizontal { 
+                gap: 8px; 
+            }
+            .time-group-horizontal { 
+                max-width: 70px;
+            }
+            .time-group-horizontal input { 
+                font-size: 1.3rem;
+                padding: 0.5rem;
+            }
+            .time-separator { 
+                font-size: 1.5rem;
+                margin: 0 1px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.6rem; }
+            .timer-display { 
+                font-size: var(--timer-md);
+                letter-spacing: 4px; 
+                min-height: 100px;
+                max-width: 400px;
+            }
+            .btn { 
+                min-width: 100%; 
+                padding: 1rem;
+            }
+            .controls { 
+                flex-direction: column; 
+                gap: 10px;
+            }
+            .time-inputs-horizontal { 
+                gap: 5px; 
+            }
+            .time-group-horizontal { 
+                max-width: 60px;
+            }
+            .time-group-horizontal input { 
+                font-size: 1.1rem;
+                padding: 0.4rem;
+            }
+            .time-separator { 
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -49,17 +482,14 @@
         
         <div class="status-container">
             <div id="phaseIndicator" class="phase-indicator detenido">
-                <!-- Sin texto, solo indicador visual -->
+                CRONÓMETRO DETENIDO
             </div>
             
             <div class="progress-container">
                 <div id="progressBar" class="progress-bar"></div>
             </div>
             
-            <!-- 🆕 CONTENEDOR MEJORADO PARA EL CRONÓMETRO -->
-            <div class="timer-container">
-                <div id="timer" class="timer-display">00:00</div>
-            </div>
+            <div id="timer" class="timer-display">00:00:00</div>
         </div>
         
         <div class="controls">
@@ -78,7 +508,7 @@
 
     <script>
         // ============================================
-        // 🔥 CONFIGURACIÓN FIREBASE (SIEMPRE ACTIVA)
+        // CONFIGURACIÓN FIREBASE
         // ============================================
         const firebaseConfig = {
             apiKey: "AIzaSyBYXblIyc9N5NqBCzL4R5d3AOwrwpy6NlA",
@@ -91,110 +521,34 @@
         };
 
         // ============================================
-        // 🌐 INICIALIZACIÓN FIREBASE - VERSIÓN CORREGIDA Y SIMPLIFICADA
+        // INICIALIZACIÓN FIREBASE
         // ============================================
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        // Variables de estado de conexión (FALTANTES EN TU CÓDIGO ORIGINAL)
+        // Variables de estado
         let firebaseDisponible = true;
         let connectionStatus = document.getElementById('connectionStatus');
-        let reconexionIntentos = 0;
-        const MAX_RECONEXIONES = 10;
-
-        // Función para actualizar estado de conexión (FALTANTE EN TU CÓDIGO ORIGINAL)
-        function actualizarEstadoConexion(conectado, mensaje) {
-            if (conectado) {
-                connectionStatus.className = "connection-status connection-online";
-                connectionStatus.innerHTML = `<i class="fas fa-wifi"></i> ${mensaje}`;
-            } else {
-                connectionStatus.className = "connection-status connection-offline";
-                connectionStatus.innerHTML = `<i class="fas fa-wifi-slash"></i> ${mensaje}`;
-            }
-        }
-
-        // Configurar monitoreo de conexión (NO SE LLAMABA EN TU CÓDIGO)
-        function configurarMonitoreoConexion() {
-            // Monitor de conexión de Firebase
-            db.ref(".info/connected").on("value", function(snap) {
-                if (snap.val() === true) {
-                    firebaseDisponible = true;
-                    reconexionIntentos = 0;
-                    actualizarEstadoConexion(true, "CONECTADO");
-                    console.log("📡 Conexión Firebase establecida");
-                } else {
-                    firebaseDisponible = false;
-                    actualizarEstadoConexion(false, "RECONECTANDO...");
-                    console.log("⚠️ Conexión Firebase perdida, reconectando...");
-                }
-            });
-
-            // Detectar errores de conexión
-            db.ref(".info/connected").on("value", null, function(error) {
-                console.error("❌ Error de conexión Firebase:", error);
-                firebaseDisponible = false;
-                actualizarEstadoConexion(false, "ERROR CONEXIÓN");
-                
-                // Intentar reconexión
-                setTimeout(inicializarFirebase, 3000);
-            });
-        }
-
-        // Función para inicializar Firebase (FALTANTE EN TU CÓDIGO ORIGINAL)
-        function inicializarFirebase() {
-            try {
-                if (firebase.apps.length === 0) {
-                    firebase.initializeApp(firebaseConfig);
-                }
-                
-                db = firebase.database();
-                firebaseDisponible = true;
-                
-                // Configurar listeners de conexión
-                configurarMonitoreoConexion();
-                
-                console.log("✅ Firebase inicializado correctamente");
-                actualizarEstadoConexion(true, "CONECTADO");
-                
-                // Iniciar sincronización (ESTA LLAMADA FALTABA)
-                configurarFirebaseListener();
-                
-            } catch (error) {
-                console.error("❌ Error al inicializar Firebase:", error);
-                firebaseDisponible = false;
-                actualizarEstadoConexion(false, "ERROR FIREBASE");
-                
-                // Intentar reconexión después de 5 segundos
-                setTimeout(() => {
-                    if (reconexionIntentos < MAX_RECONEXIONES) {
-                        reconexionIntentos++;
-                        console.log(`🔄 Intento de reconexión ${reconexionIntentos}/${MAX_RECONEXIONES}`);
-                        inicializarFirebase();
-                    }
-                }, 5000);
-            }
-        }
 
         // ============================================
-        // ⏱ VARIABLES DEL CRONÓMETRO
+        // VARIABLES DEL CRONÓMETRO
         // ============================================
         let tiempoTotal = 0;
-        let tiempoRestante = tiempoTotal;
+        let tiempoRestante = 0;
         let intervalo = null;
         let enEjecucion = false;
         
-        // Alertas activadas
+        // Alertas
         let alerta5minActivada = false;
         let alerta3minActivada = false;
         let alerta1minActivada = false;
         
-        // Sistema de audio
+        // Audio
         let audioContext = null;
         let sonidosHabilitados = false;
 
         // ============================================
-        // 🎮 ELEMENTOS DE LA INTERFAZ
+        // ELEMENTOS DE LA INTERFAZ
         // ============================================
         const timerDisplay = document.getElementById('timer');
         const phaseIndicator = document.getElementById('phaseIndicator');
@@ -207,225 +561,36 @@
         const segundosInput = document.getElementById('segundosInput');
 
         // ============================================
-        // 🎵 SISTEMA DE AUDIO
+        // FUNCIONES DE CONEXIÓN
         // ============================================
-        function inicializarAudio() {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                sonidosHabilitados = true;
-                console.log("🔊 Audio inicializado");
-            } catch (e) {
-                console.warn("⚠️ Audio no disponible:", e);
-                sonidosHabilitados = false;
+        function actualizarEstadoConexion(conectado, mensaje) {
+            if (conectado) {
+                connectionStatus.className = "connection-status connection-online";
+                connectionStatus.innerHTML = `<i class="fas fa-wifi"></i> ${mensaje}`;
+            } else {
+                connectionStatus.className = "connection-status connection-offline";
+                connectionStatus.innerHTML = `<i class="fas fa-wifi-slash"></i> ${mensaje}`;
             }
         }
 
-        function reproducirAlarmaLarga() {
-            if (!sonidosHabilitados) return;
-            try {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                oscillator.frequency.value = 500;
-                oscillator.type = 'sawtooth';
-                const ahora = audioContext.currentTime;
-                gainNode.gain.setValueAtTime(0, ahora);
-                gainNode.gain.linearRampToValueAtTime(1.0, ahora + 0.05);
-                gainNode.gain.setValueAtTime(1.0, ahora + 1.8);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, ahora + 2.0);
-                oscillator.start(ahora);
-                oscillator.stop(ahora + 2.0);
-            } catch (e) {
-                console.warn("Error en alarma larga:", e);
-            }
-        }
-
-        function reproducirAlertaCorta() {
-            if (!sonidosHabilitados) return;
-            try {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                oscillator.frequency.value = 1000;
-                oscillator.type = 'square';
-                const ahora = audioContext.currentTime;
-                gainNode.gain.setValueAtTime(0, ahora);
-                gainNode.gain.linearRampToValueAtTime(0.8, ahora + 0.01);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, ahora + 0.15);
-                oscillator.start(ahora);
-                oscillator.stop(ahora + 0.15);
-            } catch (e) {
-                console.warn("Error en alerta corta:", e);
-            }
+        function configurarMonitoreoConexion() {
+            db.ref(".info/connected").on("value", function(snap) {
+                firebaseDisponible = snap.val() === true;
+                actualizarEstadoConexion(firebaseDisponible, firebaseDisponible ? "CONECTADO" : "DESCONECTADO");
+            });
         }
 
         // ============================================
-        // ⚙️ CONFIGURACIÓN DE TIEMPO
+        // FUNCIONES DEL CRONÓMETRO
         // ============================================
         function calcularTiempoTotal() {
             const horas = parseInt(horasInput.value) || 0;
             const minutos = parseInt(minutosInput.value) || 0;
             const segundos = parseInt(segundosInput.value) || 0;
             
-            const horasValidas = Math.min(Math.max(horas, 0), 24);
-            const minutosValidos = Math.min(Math.max(minutos, 0), 59);
-            const segundosValidos = Math.min(Math.max(segundos, 0), 59);
-            
-            horasInput.value = horasValidas;
-            minutosInput.value = minutosValidos;
-            segundosInput.value = segundosValidos;
-            
-            return (horasValidas * 3600) + (minutosValidos * 60) + segundosValidos;
+            return (horas * 3600) + (minutos * 60) + segundos;
         }
 
-        function configurarTiempo() {
-            tiempoTotal = calcularTiempoTotal();
-            
-            if (!enEjecucion) {
-                tiempoRestante = tiempoTotal;
-                actualizarDisplay();
-                reiniciarAlertas();
-            }
-            
-            // Sincronizar con Firebase si está disponible
-            if (firebaseDisponible && enEjecucion) {
-                try {
-                    db.ref("cronometro").update({
-                        tiempoTotal: tiempoTotal,
-                        tiempoRestante: tiempoRestante
-                    });
-                } catch (error) {
-                    console.log("⚠️ Error al sincronizar tiempo:", error);
-                }
-            }
-            
-            habilitarControles(!enEjecucion && tiempoTotal > 0, enEjecucion, true);
-        }
-
-        function reiniciarAlertas() {
-            alerta5minActivada = false;
-            alerta3minActivada = false;
-            alerta1minActivada = false;
-        }
-
-        // ============================================
-        // 📡 SINCRONIZACIÓN CON FIREBASE - VERSIÓN CORREGIDA
-        // ============================================
-        function configurarFirebaseListener() {
-            if (!db) return;
-            
-            console.log("🔄 Configurando listener de Firebase...");
-            
-            // Escuchar cambios en la base de datos
-            db.ref("cronometro").on("value", function(snapshot) {
-                const data = snapshot.val();
-                
-                if (!data) {
-                    // Si no hay datos, crear estructura inicial
-                    db.ref("cronometro").set({
-                        enEjecucion: false,
-                        tiempoTotal: 0,
-                        tiempoRestante: 0,
-                        alerta5min: false,
-                        alerta3min: false,
-                        alerta1min: false
-                    });
-                    return;
-                }
-
-                // Sincronizar tiempo
-                tiempoTotal = data.tiempoTotal || 0;
-                tiempoRestante = data.tiempoRestante || 0;
-                enEjecucion = data.enEjecucion || false;
-
-                // Sincronizar alertas
-                alerta5minActivada = data.alerta5min || false;
-                alerta3minActivada = data.alerta3min || false;
-                alerta1minActivada = data.alerta1min || false;
-
-                // Actualizar inputs
-                const horas = Math.floor(tiempoTotal / 3600);
-                const minutos = Math.floor((tiempoTotal % 3600) / 60);
-                const segundos = tiempoTotal % 60;
-                
-                horasInput.value = horas;
-                minutosInput.value = minutos;
-                segundosInput.value = segundos;
-
-                // Actualizar interfaz
-                actualizarDisplay();
-                
-                if (enEjecucion) {
-                    phaseIndicator.className = "phase-indicator en-ejecucion";
-                    habilitarControles(false, true, false);
-                    deshabilitarInputs(true);
-                    
-                    // Iniciar intervalo local si no está corriendo
-                    if (!intervalo) {
-                        iniciarIntervaloTiempo();
-                    }
-                } else {
-                    phaseIndicator.className = "phase-indicator detenido";
-                    habilitarControles(true, false, true);
-                    deshabilitarInputs(false);
-                    
-                    // Detener intervalo local
-                    clearInterval(intervalo);
-                    intervalo = null;
-                }
-                
-                console.log("🔄 Datos sincronizados desde Firebase");
-                
-            }, function(error) {
-                console.error("❌ Error en listener Firebase:", error);
-                actualizarEstadoConexion(false, "ERROR SINCRONIZACIÓN");
-            });
-        }
-
-        function iniciarIntervaloTiempo() {
-            clearInterval(intervalo);
-            
-            intervalo = setInterval(function() {
-                if (tiempoRestante > 0) {
-                    tiempoRestante--;
-                    actualizarDisplay();
-                    manejarAlertas();
-                    
-                    // Sincronizar con Firebase
-                    if (firebaseDisponible) {
-                        try {
-                            db.ref("cronometro").update({
-                                tiempoRestante: tiempoRestante
-                            });
-                        } catch (error) {
-                            console.log("⚠️ Error al sincronizar tiempo restante:", error);
-                        }
-                    }
-                    
-                    if (tiempoRestante === 0) {
-                        clearInterval(intervalo);
-                        intervalo = null;
-                        
-                        // Actualizar estado en Firebase
-                        if (firebaseDisponible) {
-                            db.ref("cronometro").update({
-                                enEjecucion: false
-                            });
-                        } else {
-                            enEjecucion = false;
-                            habilitarControles(true, false, true);
-                            deshabilitarInputs(false);
-                        }
-                    }
-                }
-            }, 1000);
-        }
-
-        // ============================================
-        // 🖥 FUNCIONES DE INTERFAZ
-        // ============================================
         function actualizarDisplay() {
             const horas = Math.floor(tiempoRestante / 3600);
             const minutos = Math.floor((tiempoRestante % 3600) / 60);
@@ -446,72 +611,33 @@
             }
             progressBar.style.width = `${progreso}%`;
             
-            // Colores según tiempo restante
+            // Estados visuales
             if (tiempoRestante <= 5 && tiempoRestante > 0) {
                 timerDisplay.classList.add('tiempo-critico');
                 timerDisplay.classList.remove('tiempo-alerta');
-                progressBar.style.background = 'linear-gradient(90deg, var(--accent-red), #e91e63)';
                 phaseIndicator.className = "phase-indicator tiempo-critico";
+                phaseIndicator.textContent = "¡TIEMPO CRÍTICO!";
+                progressBar.style.background = 'linear-gradient(90deg, var(--accent-red), #e91e63)';
             } else if (tiempoRestante <= 60 && tiempoRestante > 0) {
                 timerDisplay.classList.add('tiempo-alerta');
                 timerDisplay.classList.remove('tiempo-critico');
-                progressBar.style.background = 'linear-gradient(90deg, var(--accent-orange), var(--accent-red))';
                 phaseIndicator.className = "phase-indicator tiempo-alerta";
+                phaseIndicator.textContent = "TIEMPO DE ALERTA";
+                progressBar.style.background = 'linear-gradient(90deg, var(--accent-orange), var(--accent-red))';
             } else {
                 timerDisplay.classList.remove('tiempo-critico', 'tiempo-alerta');
                 progressBar.style.background = 'linear-gradient(90deg, var(--accent-green), var(--accent-blue))';
-                phaseIndicator.className = enEjecucion ? "phase-indicator en-ejecucion" : "phase-indicator detenido";
+                
+                if (enEjecucion) {
+                    phaseIndicator.className = "phase-indicator en-ejecucion";
+                    phaseIndicator.textContent = "CRONÓMETRO EN EJECUCIÓN";
+                } else {
+                    phaseIndicator.className = "phase-indicator detenido";
+                    phaseIndicator.textContent = "CRONÓMETRO DETENIDO";
+                }
             }
         }
 
-        function manejarAlertas() {
-            const alerta5min = 5 * 60;  // 5 minutos
-            const alerta3min = 3 * 60;  // 3 minutos
-            const alerta1min = 1 * 60;  // 1 minuto
-            
-            if (tiempoTotal > 0) {
-                // Alarma a 5 minutos
-                if (tiempoRestante === alerta5min && !alerta5minActivada && tiempoTotal > alerta5min) {
-                    reproducirAlarmaLarga();
-                    alerta5minActivada = true;
-                    if (firebaseDisponible) {
-                        db.ref("cronometro").update({ alerta5min: true });
-                    }
-                }
-                
-                // Alarma a 3 minutos
-                if (tiempoRestante === alerta3min && !alerta3minActivada && tiempoTotal > alerta3min) {
-                    reproducirAlarmaLarga();
-                    alerta3minActivada = true;
-                    if (firebaseDisponible) {
-                        db.ref("cronometro").update({ alerta3min: true });
-                    }
-                }
-                
-                // Alarma a 1 minuto
-                if (tiempoRestante === alerta1min && !alerta1minActivada && tiempoTotal > alerta1min) {
-                    reproducirAlarmaLarga();
-                    alerta1minActivada = true;
-                    if (firebaseDisponible) {
-                        db.ref("cronometro").update({ alerta1min: true });
-                    }
-                }
-                
-                // Pitidos cada segundo en últimos 5 segundos
-                if (tiempoRestante <= 5 && tiempoRestante > 0 && tiempoTotal > 5) {
-                    reproducirAlertaCorta();
-                }
-            }
-            
-            // Alarma final cuando llega a 0
-            if (tiempoRestante === 0 && tiempoTotal > 0) {
-                setTimeout(() => reproducirAlarmaLarga(), 200);
-            }
-        }
-
-        // ============================================
-        // 🎮 FUNCIONES DE CONTROL (SIEMPRE SINCRONIZADAS)
-        // ============================================
         function iniciar() {
             tiempoTotal = calcularTiempoTotal();
             
@@ -520,136 +646,85 @@
                 return;
             }
             
-            if (enEjecucion) return;
-            
-            console.log("▶️ INICIANDO cronómetro...");
-            
-            // Configurar tiempo restante
             tiempoRestante = tiempoTotal;
+            enEjecucion = true;
             
             // Sincronizar con Firebase
             if (firebaseDisponible) {
-                try {
-                    db.ref("cronometro").set({
-                        enEjecucion: true,
-                        tiempoTotal: tiempoTotal,
-                        tiempoRestante: tiempoRestante,
-                        alerta5min: false,
-                        alerta3min: false,
-                        alerta1min: false,
-                        ultimoCambio: Date.now(),
-                        dispositivo: navigator.userAgent.substring(0, 50)
-                    }).then(() => {
-                        console.log("✅ Cronómetro iniciado en Firebase");
-                        // El listener se encargará de actualizar la interfaz
-                    }).catch(error => {
-                        console.error("❌ Error al iniciar en Firebase:", error);
-                        iniciarLocal();
-                    });
-                } catch (error) {
-                    console.error("❌ Error con Firebase:", error);
-                    iniciarLocal();
-                }
-            } else {
-                // Modo local si Firebase no está disponible
-                iniciarLocal();
+                db.ref("cronometro").set({
+                    enEjecucion: true,
+                    tiempoTotal: tiempoTotal,
+                    tiempoRestante: tiempoRestante,
+                    alerta5min: false,
+                    alerta3min: false,
+                    alerta1min: false
+                });
             }
-        }
-        
-        function iniciarLocal() {
-            enEjecucion = true;
-            habilitarControles(false, true, false);
+            
+            habilitarControles(false, true, true);
             deshabilitarInputs(true);
-            phaseIndicator.className = "phase-indicator en-ejecucion";
-            iniciarIntervaloTiempo();
+            
+            // Iniciar intervalo
+            clearInterval(intervalo);
+            intervalo = setInterval(() => {
+                if (tiempoRestante > 0) {
+                    tiempoRestante--;
+                    actualizarDisplay();
+                    
+                    // Sincronizar tiempo restante
+                    if (firebaseDisponible) {
+                        db.ref("cronometro").update({ tiempoRestante: tiempoRestante });
+                    }
+                    
+                    if (tiempoRestante === 0) {
+                        clearInterval(intervalo);
+                        enEjecucion = false;
+                        habilitarControles(true, false, true);
+                        deshabilitarInputs(false);
+                        
+                        if (firebaseDisponible) {
+                            db.ref("cronometro").update({ enEjecucion: false });
+                        }
+                        
+                        // Sonido al terminar
+                        reproducirAlarmaFinal();
+                    }
+                }
+            }, 1000);
         }
 
         function detener() {
-            if (!enEjecucion) return;
-            
-            console.log("⏸️ DETENIENDO cronómetro...");
-            
-            // Sincronizar con Firebase
-            if (firebaseDisponible) {
-                try {
-                    db.ref("cronometro").update({
-                        enEjecucion: false
-                    }).then(() => {
-                        console.log("✅ Cronómetro detenido en Firebase");
-                        // El listener se encargará de actualizar la interfaz
-                    }).catch(error => {
-                        console.error("❌ Error al detener en Firebase:", error);
-                        detenerLocal();
-                    });
-                } catch (error) {
-                    console.error("❌ Error con Firebase:", error);
-                    detenerLocal();
-                }
-            } else {
-                // Modo local si Firebase no está disponible
-                detenerLocal();
-            }
-        }
-        
-        function detenerLocal() {
             clearInterval(intervalo);
-            intervalo = null;
             enEjecucion = false;
+            
+            if (firebaseDisponible) {
+                db.ref("cronometro").update({ enEjecucion: false });
+            }
+            
             habilitarControles(true, false, true);
             deshabilitarInputs(false);
-            phaseIndicator.className = "phase-indicator detenido";
+            actualizarDisplay();
         }
 
         function reiniciar() {
-            console.log("🔄 REINICIANDO cronómetro...");
-            
-            tiempoTotal = calcularTiempoTotal();
-            tiempoRestante = tiempoTotal;
-            reiniciarAlertas();
-            
-            // Sincronizar con Firebase
-            if (firebaseDisponible) {
-                try {
-                    db.ref("cronometro").set({
-                        enEjecucion: false,
-                        tiempoTotal: tiempoTotal,
-                        tiempoRestante: tiempoRestante,
-                        alerta5min: false,
-                        alerta3min: false,
-                        alerta1min: false,
-                        ultimoCambio: Date.now()
-                    }).then(() => {
-                        console.log("✅ Cronómetro reiniciado en Firebase");
-                        actualizarDisplay();
-                    }).catch(error => {
-                        console.error("❌ Error al reiniciar en Firebase:", error);
-                        reiniciarLocal();
-                    });
-                } catch (error) {
-                    console.error("❌ Error con Firebase:", error);
-                    reiniciarLocal();
-                }
-            } else {
-                // Modo local si Firebase no está disponible
-                reiniciarLocal();
-            }
-        }
-        
-        function reiniciarLocal() {
-            // Detener si está en ejecución
             clearInterval(intervalo);
-            intervalo = null;
             enEjecucion = false;
-            
-            // Restablecer valores
             tiempoTotal = calcularTiempoTotal();
             tiempoRestante = tiempoTotal;
-            reiniciarAlertas();
             
-            // Actualizar interfaz
+            if (firebaseDisponible) {
+                db.ref("cronometro").set({
+                    enEjecucion: false,
+                    tiempoTotal: tiempoTotal,
+                    tiempoRestante: tiempoRestante,
+                    alerta5min: false,
+                    alerta3min: false,
+                    alerta1min: false
+                });
+            }
+            
             habilitarControles(true, false, true);
             deshabilitarInputs(false);
-            phaseIndicator.className = "phase-indicator detenido";
             actualizarDisplay();
         }
 
@@ -657,15 +732,6 @@
             startBtn.disabled = !iniciar;
             stopBtn.disabled = !detener;
             resetBtn.disabled = !reiniciar;
-            
-            // Deshabilitar botón de inicio si el tiempo es 0
-            tiempoTotal = calcularTiempoTotal();
-            if (tiempoTotal === 0) {
-                startBtn.disabled = true;
-                startBtn.title = "Configura un tiempo mayor a 0 para iniciar";
-            } else {
-                startBtn.title = "";
-            }
         }
 
         function deshabilitarInputs(deshabilitar) {
@@ -675,36 +741,116 @@
         }
 
         // ============================================
-        // 📋 EVENT LISTENERS
+        // SISTEMA DE AUDIO
         // ============================================
-        horasInput.addEventListener('input', configurarTiempo);
-        minutosInput.addEventListener('input', configurarTiempo);
-        segundosInput.addEventListener('input', configurarTiempo);
+        function inicializarAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                sonidosHabilitados = true;
+            } catch (e) {
+                sonidosHabilitados = false;
+            }
+        }
 
-        startBtn.addEventListener('click', iniciar);
-        stopBtn.addEventListener('click', detener);
-        resetBtn.addEventListener('click', reiniciar);
+        function reproducirAlarmaFinal() {
+            if (!sonidosHabilitados) return;
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                const ahora = audioContext.currentTime;
+                gainNode.gain.setValueAtTime(0, ahora);
+                gainNode.gain.linearRampToValueAtTime(0.8, ahora + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, ahora + 1.5);
+                oscillator.start(ahora);
+                oscillator.stop(ahora + 1.5);
+            } catch (e) {}
+        }
 
         // ============================================
-        // 🚀 INICIALIZACIÓN - VERSIÓN CORREGIDA
+        // LISTENER DE FIREBASE
+        // ============================================
+        function configurarFirebaseListener() {
+            db.ref("cronometro").on("value", function(snapshot) {
+                const data = snapshot.val();
+                
+                if (!data) {
+                    db.ref("cronometro").set({
+                        enEjecucion: false,
+                        tiempoTotal: 0,
+                        tiempoRestante: 0,
+                        alerta5min: false,
+                        alerta3min: false,
+                        alerta1min: false
+                    });
+                    return;
+                }
+
+                // Actualizar estado local
+                enEjecucion = data.enEjecucion || false;
+                tiempoTotal = data.tiempoTotal || 0;
+                tiempoRestante = data.tiempoRestante || 0;
+                
+                // Sincronizar inputs
+                const horas = Math.floor(tiempoTotal / 3600);
+                const minutos = Math.floor((tiempoTotal % 3600) / 60);
+                const segundos = tiempoTotal % 60;
+                
+                horasInput.value = horas;
+                minutosInput.value = minutos;
+                segundosInput.value = segundos;
+                
+                // Actualizar interfaz
+                actualizarDisplay();
+                habilitarControles(!enEjecucion, enEjecucion, true);
+                deshabilitarInputs(enEjecucion);
+                
+                // Manejar intervalo local
+                clearInterval(intervalo);
+                if (enEjecucion && tiempoRestante > 0) {
+                    intervalo = setInterval(() => {
+                        if (tiempoRestante > 0) {
+                            tiempoRestante--;
+                            actualizarDisplay();
+                            
+                            if (tiempoRestante === 0) {
+                                clearInterval(intervalo);
+                                enEjecucion = false;
+                                habilitarControles(true, false, true);
+                                deshabilitarInputs(false);
+                            }
+                        }
+                    }, 1000);
+                }
+            });
+        }
+
+        // ============================================
+        // INICIALIZACIÓN
         // ============================================
         function inicializar() {
-            console.log("🚀 Inicializando cronómetro MULTIDISPOSITIVO...");
+            // Configurar monitoreo de conexión
+            configurarMonitoreoConexion();
+            
+            // Configurar listener de Firebase
+            configurarFirebaseListener();
             
             // Configurar tiempo inicial
             horasInput.value = 0;
             minutosInput.value = 0;
             segundosInput.value = 0;
+            tiempoTotal = 0;
+            tiempoRestante = 0;
             
-            configurarTiempo();
+            // Actualizar interfaz
             actualizarDisplay();
             habilitarControles(true, false, true);
             
             // Inicializar audio
             inicializarAudio();
-            
-            // Inicializar Firebase y configuración de conexión
-            inicializarFirebase();  // ESTA LLAMADA FALTABA
             
             // Activar audio al primer clic
             document.addEventListener('click', function() {
@@ -713,24 +859,40 @@
                 }
             }, { once: true });
             
-            console.log("✅ Cronómetro listo para múltiples dispositivos");
+            // Configurar event listeners
+            horasInput.addEventListener('input', () => {
+                if (!enEjecucion) {
+                    tiempoTotal = calcularTiempoTotal();
+                    tiempoRestante = tiempoTotal;
+                    actualizarDisplay();
+                }
+            });
+            
+            minutosInput.addEventListener('input', () => {
+                if (!enEjecucion) {
+                    tiempoTotal = calcularTiempoTotal();
+                    tiempoRestante = tiempoTotal;
+                    actualizarDisplay();
+                }
+            });
+            
+            segundosInput.addEventListener('input', () => {
+                if (!enEjecucion) {
+                    tiempoTotal = calcularTiempoTotal();
+                    tiempoRestante = tiempoTotal;
+                    actualizarDisplay();
+                }
+            });
+            
+            startBtn.addEventListener('click', iniciar);
+            stopBtn.addEventListener('click', detener);
+            resetBtn.addEventListener('click', reiniciar);
+            
+            console.log("✅ Cronómetro listo para usar");
         }
 
         // Iniciar cuando la página cargue
         window.addEventListener('load', inicializar);
-        
-        // Reconexión automática si la página pierde y recupera conexión
-        window.addEventListener('online', function() {
-            console.log("🌐 Conexión a internet recuperada");
-            if (!firebaseDisponible) {
-                inicializarFirebase();
-            }
-        });
-        
-        window.addEventListener('offline', function() {
-            console.log("🌐 Conexión a internet perdida");
-            actualizarEstadoConexion(false, "SIN INTERNET");
-        });
     </script>
 </body>
-</html>v
+</html>
